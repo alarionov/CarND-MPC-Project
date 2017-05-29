@@ -3,6 +3,70 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
+Video example: [https://www.youtube.com/watch?v=mqWMx5vaA64](https://www.youtube.com/watch?v=mqWMx5vaA64)
+
+MPC - Model predictive control is an advanced method of process control that has been in use in the process industries in chemical plants and oil refineries since the 1980s.
+
+In recent years it has also been used in power system balancing models.
+
+Model predictive controllers rely on dynamic models of the process, most often linear empirical models obtained by system identification.
+
+The main advantage of MPC is the fact that it allows the current timeslot to be optimized, while keeping future timeslots in account.
+
+This is achieved by optimizing a finite time-horizon, but only implementing the current timeslot.
+
+MPC has the ability to anticipate future events and can take control actions accordingly.
+
+PID and LQR controllers do not have this predictive ability.
+
+MPC is nearly universally implemented as a digital control, although there is research into achieving faster response times with specially designed analog circuitry.
+([Model Predictive Control, Wikipedia](https://en.wikipedia.org/wiki/Model_predictive_control))
+
+---
+
+# Model
+
+## State
+ * x - position in the forward direction
+ * y - position in the lateral direction
+ * psi - orientation
+ * v - velocity
+
+## Actuators
+ * delta - steering angle (radians)
+ * a - acceleration
+
+## Errors
+ * cte - distance from trajectory
+ * epsi - difference of orientation and trajectory orientation
+
+# Update equations
+
+```
+x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+v_[t+1] = v[t] + a[t] * dt
+cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+```
+
+# Latency
+
+In a real car, an actuation command won't execute instantly - there will be a delay as the command propagates through the system. A realistic delay might be on the order of 100 milliseconds.
+
+This is a problem called "latency", and it's a difficult challenge for some controllers - like a PID controller - to overcome.
+But a Model Predictive Controller can adapt quite well because we can model this latency in the system.
+[Lesson 19. Model Predictive Control](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/338b458f-7ebf-449c-9ad1-611eb933b076/concepts/92ab8c01-fc5c-4554-85f9-bba8ed4ead20)
+
+To account for the delay the update equations include `dt=0.1`.
+
+# Timestep length and elapsed duration
+
+I started with `N=25` and `dt=0.5`. These parameters gave good result, but the car was swinging from time to time. Increasing `N` and decreasing `dt` lead to more swinging. Increasing `dt` and decreasing `N`, on the other hand, lead to a smoother behavior of the car.
+I ended up with `N=10` and `dt=0.1`.
+
+---
 ## Dependencies
 
 * cmake >= 3.5
@@ -22,7 +86,7 @@ Self-Driving Car Engineer Nanodegree Program
   * Mac: `brew install ipopt`
   * Linux
     * You will need a version of Ipopt 3.12.1 or higher. The version available through `apt-get` is 3.11.x. If you can get that version to work great but if not there's a script `install_ipopt.sh` that will install Ipopt. You just need to download the source from the Ipopt [releases page](https://www.coin-or.org/download/source/Ipopt/) or the [Github releases](https://github.com/coin-or/Ipopt/releases) page.
-    * Then call `install_ipopt.sh` with the source directory as the first argument, ex: `bash install_ipopt.sh Ipopt-3.12.1`. 
+    * Then call `install_ipopt.sh` with the source directory as the first argument, ex: `bash install_ipopt.sh Ipopt-3.12.1`.
   * Windows: TODO. If you can use the Linux subsystem and follow the Linux instructions.
 * [CppAD](https://www.coin-or.org/CppAD/)
   * Mac: `brew install cppad`
